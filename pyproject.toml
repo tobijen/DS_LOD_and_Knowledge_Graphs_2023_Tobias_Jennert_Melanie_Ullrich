@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "ds-lod-and-knowledge-graphs-2023-tobias-jennert-melanie-ullrich"
+version = "0.1.0"
+description = ""
+authors = ["tobijen <tobiasjennert@web.de>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
