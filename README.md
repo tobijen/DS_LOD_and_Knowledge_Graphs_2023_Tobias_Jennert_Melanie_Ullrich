@@ -18,8 +18,13 @@ Source:
 - https://towardsdatascience.com/how-to-convert-any-text-into-a-graph-of-concepts-110844f22a1a
 - https://docs.openalex.org/api-entities/works
 
-## Todos
 
-- Filter data for domain
-- Get abstract from filtered data
-- Train ollama with text
+
+## Project Planing
+
+- Get abstract data from the open alex api ✅
+- Extract the text from the api response ✅
+- Store the abstract text in a txt file ✅
+- Insert filters in the open alex url to get works for a specific topic
+- Get Ollama running via the api
+- Query Ollama for testing

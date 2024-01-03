@@ -1,3 +1,6 @@
+from langchain.text_splitter import CharacterTextSplitter, RecursiveCharacterTextSplitter
+
+
 def get_text(data: dict):
     '''
     The abstract text is packed in a dictionary and constists of the words as keys and the indexlist where the word occurs as the values.
@@ -45,3 +48,25 @@ def get_text(data: dict):
                 abstract_text.append(word)
     
     return ' '.join(abstract_text)
+
+
+def text_to_file(file_path, text):
+    with open(file_path, 'a') as file:
+        # Write content to the file
+        file.write(text)
+
+
+
+def split_text(file_path):
+    text_splitter = RecursiveCharacterTextSplitter(
+    # Set a really small chunk size, just to show.
+    chunk_size=100,
+    chunk_overlap=20,
+    length_function=len,
+    is_separator_regex=False,
+    )
+    with open(file_path) as f:
+        text = f.read()
+        text_splitted = text_splitter.split_text(text)
+        print(text_splitted[:10])
+

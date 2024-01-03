@@ -1,7 +1,10 @@
 import requests
-from text_procesing import get_text
+
+from text_processing import get_text, text_to_file, split_text
 
 # url = 'https://api.openalex.org/works/W2741809807'
+
+path = './data/abstracts.txt'
 
 url = 'https://api.openalex.org/works?sample=20'
 response = requests.get(url)
@@ -17,11 +20,14 @@ if response.status_code == 200:
                         abstract = result["abstract_inverted_index"]
 
                         if abstract != None:
-                            print(get_text(abstract))
-                            print("--------------------")
+                            text = get_text(abstract) + "\n"
+                            text_to_file(path, text)
 
 else:
     # Request failed
     print(f"Error: {response.status_code}")
     print(response.text)  # Print the response content for debugging purposes
 
+
+
+split_text(path)
