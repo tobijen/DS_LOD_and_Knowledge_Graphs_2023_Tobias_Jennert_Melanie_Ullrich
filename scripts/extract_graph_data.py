@@ -65,3 +65,43 @@ dfg1['count'] = 4
 ## We will assign the weight of 1 when later the contextual proximity will be calculated.  
 print(dfg1.shape)
 dfg1.head()
+
+## Calculating contextual proximity
+def contextual_proximity(df: pd.DataFrame) -> pd.DataFrame:
+    ## Melt the dataframe into a list of nodes
+    dfg_long = pd.melt(
+        df, id_vars=["chunk_id"], value_vars=["node_1", "node_2"], value_name="node"
+    )
+    dfg_long.drop(columns=["variable"], inplace=True)
+    # Self join with chunk id as the key will create a link between terms occuring in the same text chunk.
+    dfg_wide = pd.merge(dfg_long, dfg_long, on="chunk_id", suffixes=("_1", "_2"))
+    # drop self loops
+    self_loops_drop = dfg_wide[dfg_wide["node_1"] == dfg_wide["node_2"]].index
+    dfg2 = dfg_wide.drop(index=self_loops_drop).reset_index(drop=True)
+    ## Group and count edges.
+    dfg2 = (
+        dfg2.groupby(["node_1", "node_2"])
+        .agg({"chunk_id": [",".join, "count"]})
+        .reset_index()
+    )
+    dfg2.columns = ["node_1", "node_2", "chunk_id", "count"]
+    dfg2.replace("", np.nan, inplace=True)
+    dfg2.dropna(subset=["node_1", "node_2"], inplace=True)
+    # Drop edges with 1 count
+    dfg2 = dfg2[dfg2["count"] != 1]
+    dfg2["edge"] = "contextual proximity"
+    return dfg2
+
+
+dfg2 = contextual_proximity(dfg1)
+dfg2.tail()
+
+## Merge both the dataframes
+
+dfg = pd.concat([dfg1, dfg2], axis=0)
+dfg = (
+    dfg.groupby(["node_1", "node_2"])
+    .agg({"chunk_id": ",".join, "edge": ','.join, 'count': 'sum'})
+    .reset_index()
+)
+dfg
