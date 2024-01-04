@@ -25,6 +25,6 @@ Source:
 - Get abstract data from the open alex api ✅
 - Extract the text from the api response ✅
 - Store the abstract text in a txt file ✅
-- Insert filters in the open alex url to get works for a specific topic
+- Insert filters in the open alex url to get works for a specific topic ✅
 - Get Ollama running via the api
 - Query Ollama for testing

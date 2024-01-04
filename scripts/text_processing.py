@@ -50,8 +50,9 @@ def get_text(data: dict):
     return ' '.join(abstract_text)
 
 
-def text_to_file(file_path, text):
-    with open(file_path, 'a') as file:
+
+def text_to_file(file_path, text, encoding='utf-8'):
+    with open(file_path, 'a', encoding=encoding) as file:
         # Write content to the file
         file.write(text)
 
@@ -65,7 +66,7 @@ def split_text(file_path):
     length_function=len,
     is_separator_regex=False,
     )
-    with open(file_path) as f:
+    with open(file_path, encoding='utf-8') as f:
         text = f.read()
         text_splitted = text_splitter.split_text(text)
         print(text_splitted[:10])
