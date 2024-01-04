@@ -5,8 +5,10 @@ from text_processing import get_text, text_to_file, split_text
 # url = 'https://api.openalex.org/works/W2741809807'
 
 path = './data/abstracts.txt'
+windoof_path = '.\\data\\abstracts.txt'
 
-url = 'https://api.openalex.org/works?sample=20'
+url = 'https://api.openalex.org/works?filter=language:en,abstract.search:Transcription%20factors%20in%20E.%20coli' 
+
 response = requests.get(url)
 
 if response.status_code == 200:
