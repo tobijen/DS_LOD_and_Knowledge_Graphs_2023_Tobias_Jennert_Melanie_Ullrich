@@ -4,8 +4,8 @@ from text_processing import get_text, text_to_file, split_text
 
 # url = 'https://api.openalex.org/works/W2741809807'
 
-path = './data/abstracts.txt'
-windoof_path = '.\\data\\abstracts.txt'
+path = './data/abstract_input/abstracts.txt'
+windoof_path = '.\\data\\abstract_input\\abstracts.txt'
 
 url = 'https://api.openalex.org/works?filter=language:en,abstract.search:Transcription%20factors%20in%20E.%20coli' 
 
@@ -30,7 +30,3 @@ else:
     # Request failed
     print(f"Error: {response.status_code}")
     print(response.text)  # Print the response content for debugging purposes
-
-
-
-split_text(path)
