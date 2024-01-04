@@ -14,6 +14,7 @@ response = requests.get(url)
 if response.status_code == 200:
     # Request was successful
     data = response.json()  # If the response is in JSON format
+    print(len(data['results']))
     for key, value in data.items():
             
             if key == 'results':

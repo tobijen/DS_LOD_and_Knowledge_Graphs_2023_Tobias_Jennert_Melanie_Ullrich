@@ -61,8 +61,8 @@ def text_to_file(file_path, text, encoding='utf-8'):
 def split_text(file_path):
     text_splitter = RecursiveCharacterTextSplitter(
     # Set a really small chunk size, just to show.
-    chunk_size=100,
-    chunk_overlap=20,
+    chunk_size=1500,
+    chunk_overlap=150,
     length_function=len,
     is_separator_regex=False,
     )
