@@ -28,7 +28,7 @@ Source:
 - Insert filters in the open alex url to get works for a specific topic ✅
 - Get Ollama running via the api ✅
 - Generate graph data with ollama
-- Load graph data into neo4j
+- Load graph data into neo4j 
 - Visualize graph data in neo4j
 
 
