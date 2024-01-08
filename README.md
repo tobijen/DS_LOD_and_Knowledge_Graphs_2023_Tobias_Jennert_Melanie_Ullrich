@@ -26,5 +26,9 @@ Source:
 - Extract the text from the api response ✅
 - Store the abstract text in a txt file ✅
 - Insert filters in the open alex url to get works for a specific topic ✅
-- Get Ollama running via the api
-- Query Ollama for testing
+- Get Ollama running via the api ✅
+- Generate graph data with ollama
+- Load graph data into neo4j
+- Visualize graph data in neo4j
+
+

@@ -48,7 +48,7 @@ print(df.head())
 regenerate = True
 
 if regenerate:
-    concepts_list = df2Graph(df, model='zephyr:latest')
+    concepts_list = df2Graph(df[0], model='zephyr:latest')
     dfg1 = graph2Df(concepts_list)
     if not os.path.exists(outputdirectory):
         os.makedirs(outputdirectory)
@@ -104,4 +104,3 @@ dfg = (
     .agg({"chunk_id": ",".join, "edge": ','.join, 'count': 'sum'})
     .reset_index()
 )
-dfg
