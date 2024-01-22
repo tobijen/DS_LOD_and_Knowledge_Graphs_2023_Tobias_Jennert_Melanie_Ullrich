@@ -42,13 +42,15 @@ df = documents2Dataframe(pages)
 print(df.shape)
 print(df.head())
 
+print("DF: ", df[:1])
+
 
 ## Extract concepts
 ## To regenerate the graph with LLM, set this to True
-regenerate = True
+regenerate = False
 
 if regenerate:
-    concepts_list = df2Graph(df[0], model='zephyr:latest')
+    concepts_list = df2Graph(df[:10], model='zephyr:latest')
     dfg1 = graph2Df(concepts_list)
     if not os.path.exists(outputdirectory):
         os.makedirs(outputdirectory)
