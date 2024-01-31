@@ -1,0 +1,562 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/css/tom-select.min.css" integrity="sha512-43fHB3GLgZfz8QXl1RPQ8O66oIgv3po9cJ5erMt1c4QISq9dYb195T3vr5ImnJPXuVroKcGBPXBFKETW8jrPNQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/tom-select/2.0.0-rc.4/js/tom-select.complete.js" integrity="sha512-jeF9CfnvzDiw9G9xiksVjxR2lib44Gnovvkv+3CgCG6NXCD4gqlA5nDAVW5WjpA+i+/zKsUWV5xNEbW1X/HH0Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 900px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+                <div id="select-menu" class="card-header">
+                    <div class="row no-gutters">
+                        <div class="col-10 pb-2">
+                            <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="selectNode([value]);"
+                            id="select-node"
+                            placeholder="Select node..."
+                            >
+                                <option selected>Select a Node by ID</option>
+                                
+                                    <option value="56 genes">56 genes</option>
+                                
+                                    <option value="adenine stimulation">adenine stimulation</option>
+                                
+                                    <option value="purr">purr</option>
+                                
+                                    <option value="e. coli strain lacking the purr gene">e. coli strain lacking the purr gene</option>
+                                
+                                    <option value="696 c-terminal amino acid residues">696 c-terminal amino acid residues</option>
+                                
+                                    <option value="sp1 (human)">sp1 (human)</option>
+                                
+                                    <option value="sp1 (human) (c-terminal 168 amino acid residues)">sp1 (human) (c-terminal 168 amino acid residues)</option>
+                                
+                                    <option value="functions and size">functions and size</option>
+                                
+                                    <option value="global level">global level</option>
+                                
+                                    <option value="microarray data">microarray data</option>
+                                
+                                    <option value="mrna decay">mrna decay</option>
+                                
+                                    <option value="purine metabolism">purine metabolism</option>
+                                
+                                    <option value="affymetrix arrays">affymetrix arrays</option>
+                                
+                                    <option value="clr algorithm">clr algorithm</option>
+                                
+                                    <option value="global performance">global performance</option>
+                                
+                                    <option value="machine learning approaches">machine learning approaches</option>
+                                
+                                    <option value="regulondb">regulondb</option>
+                                
+                                    <option value="escherichia coli">escherichia coli</option>
+                                
+                                    <option value="anomalous diffusion">anomalous diffusion</option>
+                                
+                                    <option value="bacterial gene regulation">bacterial gene regulation</option>
+                                
+                                    <option value="cytoskeletal elements">cytoskeletal elements</option>
+                                
+                                    <option value="e. coli cells">e. coli cells</option>
+                                
+                                    <option value="exponent">exponent</option>
+                                
+                                    <option value="implications">implications</option>
+                                
+                                    <option value="individual fluorescently labeled mrna molecules">individual fluorescently labeled mrna molecules</option>
+                                
+                                    <option value="macromolecular crowding">macromolecular crowding</option>
+                                
+                                    <option value="motion">motion</option>
+                                
+                                    <option value="rna molecule">rna molecule</option>
+                                
+                                    <option value="subdiffusive">subdiffusive</option>
+                                
+                                    <option value="cancer">cancer</option>
+                                
+                                    <option value="excision repair">excision repair</option>
+                                
+                                    <option value="central metabolic control of iron transport">central metabolic control of iron transport</option>
+                                
+                                    <option value="regulatory link">regulatory link</option>
+                                
+                                    <option value="chromatin immunoprecipitation">chromatin immunoprecipitation</option>
+                                
+                                    <option value="three transcription factors">three transcription factors</option>
+                                
+                                    <option value="cigarette smoke">cigarette smoke</option>
+                                
+                                    <option value="four existing classes of inference algorithms">four existing classes of inference algorithms</option>
+                                
+                                    <option value="known e. coli regulatory interactions">known e. coli regulatory interactions</option>
+                                
+                                    <option value="performance estimates">performance estimates</option>
+                                
+                                    <option value="precision gain">precision gain</option>
+                                
+                                    <option value="systematically identify transcriptional regulatory interactions">systematically identify transcriptional regulatory interactions</option>
+                                
+                                    <option value="true positive rate">true positive rate</option>
+                                
+                                    <option value="components of functional modules">components of functional modules</option>
+                                
+                                    <option value="produced differentially according to their hierarchical role">produced differentially according to their hierarchical role</option>
+                                
+                                    <option value="dna">dna</option>
+                                
+                                    <option value="dna damage">dna damage</option>
+                                
+                                    <option value="nucleotide excision repair">nucleotide excision repair</option>
+                                
+                                    <option value="e. coli">e. coli</option>
+                                
+                                    <option value="escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein">escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein</option>
+                                
+                                    <option value="gal mrna molecules">gal mrna molecules</option>
+                                
+                                    <option value="gal mrna molecules made in vitro">gal mrna molecules made in vitro</option>
+                                
+                                    <option value="gal mrna molecules made in vitro in the absence of cyclic amp or cyclic amp receptor protein">gal mrna molecules made in vitro in the absence of cyclic amp or cyclic amp receptor protein</option>
+                                
+                                    <option value="gal mrna molecules made in wild type cells">gal mrna molecules made in wild type cells</option>
+                                
+                                    <option value="gal rna">gal rna</option>
+                                
+                                    <option value="gal rna made in wild type cells">gal rna made in wild type cells</option>
+                                
+                                    <option value="gal rna synthesized in vitro in the absence of cyclic amp or cyclic amp receptor protein">gal rna synthesized in vitro in the absence of cyclic amp or cyclic amp receptor protein</option>
+                                
+                                    <option value="galactose operon">galactose operon</option>
+                                
+                                    <option value="two overlapping promoters">two overlapping promoters</option>
+                                
+                                    <option value="replication protein a">replication protein a</option>
+                                
+                                    <option value="sunlight">sunlight</option>
+                                
+                                    <option value="transcription">transcription</option>
+                                
+                                    <option value="uvra">uvra</option>
+                                
+                                    <option value="uvrb">uvrb</option>
+                                
+                                    <option value="uvrc">uvrc</option>
+                                
+                                    <option value="xeroderma pigmentosum (xp)">xeroderma pigmentosum (xp)</option>
+                                
+                                    <option value="gc box promoter elements">gc box promoter elements</option>
+                                
+                                    <option value="sp1">sp1</option>
+                                
+                                    <option value="members of multiprotein complexes">members of multiprotein complexes</option>
+                                
+                                    <option value="produced in precise proportion to their stoichiometry">produced in precise proportion to their stoichiometry</option>
+                                
+                                    <option value="methionine biosynthesis">methionine biosynthesis</option>
+                                
+                                    <option value="balances production cost with activity requirements">balances production cost with activity requirements</option>
+                                
+                                    <option value="mrna decay in escherichia coli">mrna decay in escherichia coli</option>
+                                
+                                    <option value="factors affecting mrna decay in e. coli">factors affecting mrna decay in e. coli</option>
+                                
+                                    <option value="precise measures of rates of biomolecule production">precise measures of rates of biomolecule production</option>
+                                
+                                    <option value="proteins-the direct effectors of biological processes">proteins-the direct effectors of biological processes</option>
+                                
+                                    <option value="zn(ii) finger motifs">zn(ii) finger motifs</option>
+                                
+                                    <option value="transcription factors">transcription factors</option>
+                                
+                                    <option value="level of different types is optimized for rapid response">level of different types is optimized for rapid response</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-primary btn-block" onclick="neighbourhoodHighlight({nodes: []});">Reset Selection</button>
+                        </div>
+                    </div>
+                </div>
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+                  new TomSelect("#select-node",{
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      }
+                  });
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"group": 1, "id": "56 genes", "label": "56 genes", "shape": "dot", "size": 3}, {"group": 1, "id": "adenine stimulation", "label": "adenine stimulation", "shape": "dot", "size": 8}, {"group": 1, "id": "purr", "label": "purr", "shape": "dot", "size": 8}, {"group": 1, "id": "e. coli strain lacking the purr gene", "label": "e. coli strain lacking the purr gene", "shape": "dot", "size": 3}, {"group": 2, "id": "696 c-terminal amino acid residues", "label": "696 c-terminal amino acid residues", "shape": "dot", "size": 2}, {"group": 2, "id": "sp1 (human)", "label": "sp1 (human)", "shape": "dot", "size": 7}, {"group": 2, "id": "sp1 (human) (c-terminal 168 amino acid residues)", "label": "sp1 (human) (c-terminal 168 amino acid residues)", "shape": "dot", "size": 7}, {"group": 1, "id": "functions and size", "label": "functions and size", "shape": "dot", "size": 2}, {"group": 1, "id": "global level", "label": "global level", "shape": "dot", "size": 3}, {"group": 1, "id": "microarray data", "label": "microarray data", "shape": "dot", "size": 2}, {"group": 1, "id": "mrna decay", "label": "mrna decay", "shape": "dot", "size": 3}, {"group": 1, "id": "purine metabolism", "label": "purine metabolism", "shape": "dot", "size": 2}, {"group": 3, "id": "affymetrix arrays", "label": "affymetrix arrays", "shape": "dot", "size": 5}, {"group": 3, "id": "clr algorithm", "label": "clr algorithm", "shape": "dot", "size": 15}, {"group": 3, "id": "global performance", "label": "global performance", "shape": "dot", "size": 15}, {"group": 3, "id": "machine learning approaches", "label": "machine learning approaches", "shape": "dot", "size": 15}, {"group": 3, "id": "regulondb", "label": "regulondb", "shape": "dot", "size": 15}, {"group": 3, "id": "escherichia coli", "label": "escherichia coli", "shape": "dot", "size": 6}, {"group": 4, "id": "anomalous diffusion", "label": "anomalous diffusion", "shape": "dot", "size": 10}, {"group": 4, "id": "bacterial gene regulation", "label": "bacterial gene regulation", "shape": "dot", "size": 4}, {"group": 4, "id": "cytoskeletal elements", "label": "cytoskeletal elements", "shape": "dot", "size": 4}, {"group": 4, "id": "e. coli cells", "label": "e. coli cells", "shape": "dot", "size": 4}, {"group": 4, "id": "exponent", "label": "exponent", "shape": "dot", "size": 4}, {"group": 4, "id": "implications", "label": "implications", "shape": "dot", "size": 4}, {"group": 4, "id": "individual fluorescently labeled mrna molecules", "label": "individual fluorescently labeled mrna molecules", "shape": "dot", "size": 4}, {"group": 4, "id": "macromolecular crowding", "label": "macromolecular crowding", "shape": "dot", "size": 4}, {"group": 4, "id": "motion", "label": "motion", "shape": "dot", "size": 10}, {"group": 4, "id": "rna molecule", "label": "rna molecule", "shape": "dot", "size": 10}, {"group": 4, "id": "subdiffusive", "label": "subdiffusive", "shape": "dot", "size": 10}, {"group": 6, "id": "cancer", "label": "cancer", "shape": "dot", "size": 1}, {"group": 7, "id": "excision repair", "label": "excision repair", "shape": "dot", "size": 12}, {"group": 3, "id": "central metabolic control of iron transport", "label": "central metabolic control of iron transport", "shape": "dot", "size": 5}, {"group": 3, "id": "regulatory link", "label": "regulatory link", "shape": "dot", "size": 5}, {"group": 3, "id": "chromatin immunoprecipitation", "label": "chromatin immunoprecipitation", "shape": "dot", "size": 5}, {"group": 3, "id": "three transcription factors", "label": "three transcription factors", "shape": "dot", "size": 5}, {"group": 7, "id": "cigarette smoke", "label": "cigarette smoke", "shape": "dot", "size": 1}, {"group": 3, "id": "four existing classes of inference algorithms", "label": "four existing classes of inference algorithms", "shape": "dot", "size": 4}, {"group": 3, "id": "known e. coli regulatory interactions", "label": "known e. coli regulatory interactions", "shape": "dot", "size": 4}, {"group": 3, "id": "performance estimates", "label": "performance estimates", "shape": "dot", "size": 4}, {"group": 3, "id": "precision gain", "label": "precision gain", "shape": "dot", "size": 4}, {"group": 3, "id": "systematically identify transcriptional regulatory interactions", "label": "systematically identify transcriptional regulatory interactions", "shape": "dot", "size": 4}, {"group": 3, "id": "true positive rate", "label": "true positive rate", "shape": "dot", "size": 4}, {"group": 8, "id": "components of functional modules", "label": "components of functional modules", "shape": "dot", "size": 1}, {"group": 8, "id": "produced differentially according to their hierarchical role", "label": "produced differentially according to their hierarchical role", "shape": "dot", "size": 1}, {"group": 2, "id": "dna", "label": "dna", "shape": "dot", "size": 2}, {"group": 7, "id": "dna damage", "label": "dna damage", "shape": "dot", "size": 2}, {"group": 7, "id": "nucleotide excision repair", "label": "nucleotide excision repair", "shape": "dot", "size": 2}, {"group": 2, "id": "e. coli", "label": "e. coli", "shape": "dot", "size": 2}, {"group": 9, "id": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "label": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "shape": "dot", "size": 9}, {"group": 9, "id": "gal mrna molecules", "label": "gal mrna molecules", "shape": "dot", "size": 3}, {"group": 9, "id": "gal mrna molecules made in vitro", "label": "gal mrna molecules made in vitro", "shape": "dot", "size": 3}, {"group": 9, "id": "gal mrna molecules made in vitro in the absence of cyclic amp or cyclic amp receptor protein", "label": "gal mrna molecules made in vitro in the absence of cyclic amp or cyclic amp receptor protein", "shape": "dot", "size": 3}, {"group": 9, "id": "gal mrna molecules made in wild type cells", "label": "gal mrna molecules made in wild type cells", "shape": "dot", "size": 2}, {"group": 9, "id": "gal rna", "label": "gal rna", "shape": "dot", "size": 3}, {"group": 9, "id": "gal rna made in wild type cells", "label": "gal rna made in wild type cells", "shape": "dot", "size": 3}, {"group": 9, "id": "gal rna synthesized in vitro in the absence of cyclic amp or cyclic amp receptor protein", "label": "gal rna synthesized in vitro in the absence of cyclic amp or cyclic amp receptor protein", "shape": "dot", "size": 3}, {"group": 9, "id": "galactose operon", "label": "galactose operon", "shape": "dot", "size": 9}, {"group": 9, "id": "two overlapping promoters", "label": "two overlapping promoters", "shape": "dot", "size": 2}, {"group": 7, "id": "replication protein a", "label": "replication protein a", "shape": "dot", "size": 1}, {"group": 7, "id": "sunlight", "label": "sunlight", "shape": "dot", "size": 1}, {"group": 7, "id": "transcription", "label": "transcription", "shape": "dot", "size": 1}, {"group": 7, "id": "uvra", "label": "uvra", "shape": "dot", "size": 1}, {"group": 7, "id": "uvrb", "label": "uvrb", "shape": "dot", "size": 1}, {"group": 7, "id": "uvrc", "label": "uvrc", "shape": "dot", "size": 1}, {"group": 7, "id": "xeroderma pigmentosum (xp)", "label": "xeroderma pigmentosum (xp)", "shape": "dot", "size": 1}, {"group": 2, "id": "gc box promoter elements", "label": "gc box promoter elements", "shape": "dot", "size": 3}, {"group": 2, "id": "sp1", "label": "sp1", "shape": "dot", "size": 3}, {"group": 12, "id": "members of multiprotein complexes", "label": "members of multiprotein complexes", "shape": "dot", "size": 1}, {"group": 12, "id": "produced in precise proportion to their stoichiometry", "label": "produced in precise proportion to their stoichiometry", "shape": "dot", "size": 1}, {"group": 5, "id": "methionine biosynthesis", "label": "methionine biosynthesis", "shape": "dot", "size": 1}, {"group": 5, "id": "balances production cost with activity requirements", "label": "balances production cost with activity requirements", "shape": "dot", "size": 1}, {"group": 10, "id": "mrna decay in escherichia coli", "label": "mrna decay in escherichia coli", "shape": "dot", "size": 1}, {"group": 10, "id": "factors affecting mrna decay in e. coli", "label": "factors affecting mrna decay in e. coli", "shape": "dot", "size": 1}, {"group": 13, "id": "precise measures of rates of biomolecule production", "label": "precise measures of rates of biomolecule production", "shape": "dot", "size": 1}, {"group": 13, "id": "proteins-the direct effectors of biological processes", "label": "proteins-the direct effectors of biological processes", "shape": "dot", "size": 1}, {"group": 2, "id": "zn(ii) finger motifs", "label": "zn(ii) finger motifs", "shape": "dot", "size": 2}, {"group": 11, "id": "transcription factors", "label": "transcription factors", "shape": "dot", "size": 1}, {"group": 11, "id": "level of different types is optimized for rapid response", "label": "level of different types is optimized for rapid response", "shape": "dot", "size": 1}]);
+                  edges = new vis.DataSet([{"from": "56 genes", "title": "contextual proximity", "to": "adenine stimulation", "width": 0.5}, {"from": "56 genes", "title": "contextual proximity", "to": "purr", "width": 0.75}, {"from": "56 genes", "title": "From the ChIP\u2013chip analysis, we determined that over 73% of genes directly regulated by PurR were enriched in the biosynthesis, utilization and transport of purine and pyrimidine nucleotides, and 20% of them were functionally unknown. The E. coli strain lacking the purR gene showed that a total of 56 genes are affected by the deletion.", "to": "e. coli strain lacking the purr gene", "width": 1.0}, {"from": "696 c-terminal amino acid residues", "title": "We have isolated a cDNA that encodes the 696 C-terminal amino acid residues of human Sp1.,contextual proximity", "to": "sp1 (human)", "width": 1.5}, {"from": "696 c-terminal amino acid residues", "title": "contextual proximity", "to": "sp1 (human) (c-terminal 168 amino acid residues)", "width": 0.5}, {"from": "adenine stimulation", "title": "contextual proximity", "to": "e. coli strain lacking the purr gene", "width": 0.5}, {"from": "adenine stimulation", "title": "contextual proximity", "to": "functions and size", "width": 0.5}, {"from": "adenine stimulation", "title": "contextual proximity", "to": "global level", "width": 0.5}, {"from": "adenine stimulation", "title": "Adenine stimulation led to changes in transcript level of about 10% of Escherichia coli genes, including the purine biosynthesis pathway.,contextual proximity", "to": "microarray data", "width": 1.5}, {"from": "adenine stimulation", "title": "contextual proximity", "to": "mrna decay", "width": 0.5}, {"from": "adenine stimulation", "title": "contextual proximity", "to": "purine metabolism", "width": 0.5}, {"from": "adenine stimulation", "title": "contextual proximity", "to": "purr", "width": 1.5}, {"from": "affymetrix arrays", "title": "contextual proximity", "to": "clr algorithm", "width": 0.75}, {"from": "affymetrix arrays", "title": "contextual proximity", "to": "global performance", "width": 0.75}, {"from": "affymetrix arrays", "title": "contextual proximity", "to": "machine learning approaches", "width": 0.5}, {"from": "affymetrix arrays", "title": "contextual proximity", "to": "regulondb", "width": 0.5}, {"from": "affymetrix arrays", "title": "Using 445 Escherichia coli Affymetrix arrays and 3,216 known E. coli regulatory interactions from RegulonDB.", "to": "escherichia coli", "width": 1.0}, {"from": "anomalous diffusion", "title": "especially how transcription factors find their DNA targets.,contextual proximity", "to": "bacterial gene regulation", "width": 1.5}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "cytoskeletal elements", "width": 0.5}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "e. coli cells", "width": 0.5}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "exponent", "width": 0.5}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "implications", "width": 0.5}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "individual fluorescently labeled mrna molecules", "width": 0.5}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "macromolecular crowding", "width": 0.5}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "motion", "width": 2.0}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "rna molecule", "width": 1.0}, {"from": "anomalous diffusion", "title": "contextual proximity", "to": "subdiffusive", "width": 1.5}, {"from": "bacterial gene regulation", "title": "contextual proximity", "to": "motion", "width": 1.0}, {"from": "bacterial gene regulation", "title": "contextual proximity", "to": "rna molecule", "width": 0.5}, {"from": "bacterial gene regulation", "title": "contextual proximity", "to": "subdiffusive", "width": 0.75}, {"from": "cancer", "title": "Individuals defective in excision repair exhibit a high incidence of cancer.,contextual proximity", "to": "excision repair", "width": 3.5}, {"from": "central metabolic control of iron transport", "title": "contextual proximity", "to": "clr algorithm", "width": 0.75}, {"from": "central metabolic control of iron transport", "title": "contextual proximity", "to": "global performance", "width": 0.75}, {"from": "central metabolic control of iron transport", "title": "contextual proximity", "to": "machine learning approaches", "width": 0.5}, {"from": "central metabolic control of iron transport", "title": "contextual proximity", "to": "regulondb", "width": 0.5}, {"from": "central metabolic control of iron transport", "title": "Identified a regulatory link providing central metabolic control of iron transport, which we confirmed with real-time quantitative PCR.", "to": "regulatory link", "width": 1.0}, {"from": "chromatin immunoprecipitation", "title": "contextual proximity", "to": "clr algorithm", "width": 0.75}, {"from": "chromatin immunoprecipitation", "title": "contextual proximity", "to": "global performance", "width": 0.75}, {"from": "chromatin immunoprecipitation", "title": "contextual proximity", "to": "machine learning approaches", "width": 0.5}, {"from": "chromatin immunoprecipitation", "title": "contextual proximity", "to": "regulondb", "width": 0.5}, {"from": "chromatin immunoprecipitation", "title": "Testing the predicted interactions for three transcription factors with chromatin immunoprecipitation, confirming 21 novel interactions and verifying our RegulonDB-based performance estimates.", "to": "three transcription factors", "width": 1.0}, {"from": "cigarette smoke", "title": "contextual proximity", "to": "excision repair", "width": 2.5}, {"from": "clr algorithm", "title": "contextual proximity", "to": "escherichia coli", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "four existing classes of inference algorithms", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "global performance", "width": 2.25}, {"from": "clr algorithm", "title": "contextual proximity", "to": "known e. coli regulatory interactions", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "machine learning approaches", "width": 1.5}, {"from": "clr algorithm", "title": "contextual proximity", "to": "performance estimates", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "precision gain", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "regulatory link", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "regulondb", "width": 1.5}, {"from": "clr algorithm", "title": "contextual proximity", "to": "systematically identify transcriptional regulatory interactions", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "three transcription factors", "width": 0.75}, {"from": "clr algorithm", "title": "contextual proximity", "to": "true positive rate", "width": 0.75}, {"from": "components of functional modules", "title": "Components of functional modules are produced differentially according to their hierarchical role,", "to": "produced differentially according to their hierarchical role", "width": 1.0}, {"from": "cytoskeletal elements", "title": "contextual proximity", "to": "motion", "width": 1.0}, {"from": "cytoskeletal elements", "title": "contextual proximity", "to": "rna molecule", "width": 0.5}, {"from": "cytoskeletal elements", "title": "contextual proximity", "to": "subdiffusive", "width": 0.75}, {"from": "dna", "title": "contextual proximity", "to": "sp1 (human)", "width": 0.5}, {"from": "dna", "title": "Purified Sp1 requires Zn(II) for sequence-specific binding to DNA. Thus, it is likely that Sp1 interacts with DNA by binding of the Zn(II) fingers.,contextual proximity", "to": "sp1 (human) (c-terminal 168 amino acid residues)", "width": 1.5}, {"from": "dna damage", "title": "contextual proximity", "to": "excision repair", "width": 2.5}, {"from": "dna damage", "title": "In nucleotide excision repair, DNA damage is removed through incision of the damaged strand on both sides of the lesion.", "to": "nucleotide excision repair", "width": 1.0}, {"from": "e. coli", "title": "By expression of truncated fragments of Sp1 in E. coli, we have localized the DNA binding activity to the C-terminal 168 amino acid residues.,contextual proximity", "to": "sp1 (human)", "width": 1.5}, {"from": "e. coli", "title": "contextual proximity", "to": "sp1 (human) (c-terminal 168 amino acid residues)", "width": 0.5}, {"from": "e. coli cells", "title": "We track the motion of individual fluorescently labeled mRNA molecules inside live E. coli cells.,contextual proximity", "to": "motion", "width": 2.0}, {"from": "e. coli cells", "title": "contextual proximity", "to": "rna molecule", "width": 0.5}, {"from": "e. coli cells", "title": "contextual proximity", "to": "subdiffusive", "width": 0.75}, {"from": "e. coli strain lacking the purr gene", "title": "contextual proximity", "to": "purr", "width": 0.75}, {"from": "escherichia coli", "title": "contextual proximity", "to": "excision repair", "width": 2.5}, {"from": "escherichia coli", "title": "contextual proximity", "to": "global performance", "width": 0.75}, {"from": "escherichia coli", "title": "contextual proximity", "to": "machine learning approaches", "width": 0.5}, {"from": "escherichia coli", "title": "contextual proximity", "to": "regulondb", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "gal mrna molecules", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "gal mrna molecules made in vitro", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "gal mrna molecules made in vitro in the absence of cyclic amp or cyclic amp receptor protein", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "gal mrna molecules made in wild type cells", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "gal rna", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "gal rna made in wild type cells", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "gal rna synthesized in vitro in the absence of cyclic amp or cyclic amp receptor protein", "width": 0.5}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "The difference between the mRNA transcripts of these two concepts found in intact E. Coli cells is that the former contains about five nucleotides more at their 5\u0027 end.,The difference between the mRNA transcripts of these two concepts found in intact E. Coli cells is that the former contains about five nucleotides more at their 5\u0027 end, indicating that they are regulated by the intracellular levels of cyclic AMP.,contextual proximity", "to": "galactose operon", "width": 4.0}, {"from": "escherichia coli galactose operon with a defect in adenylate cyclase or the cyclic amp receptor protein", "title": "contextual proximity", "to": "two overlapping promoters", "width": 0.5}, {"from": "excision repair", "title": "contextual proximity", "to": "nucleotide excision repair", "width": 2.5}, {"from": "excision repair", "title": "In humans, by contrast, 16 polypeptides including seven xeroderma pigmentosum (XP) proteins and the trimric replication protein A [RPA, human single-stranded DNA binding protein (HSSB)] are required for the dual incisions.,contextual proximity", "to": "replication protein a", "width": 3.5}, {"from": "excision repair", "title": "Excision repair is an important defense mechanism against the two major carcinogens, sunlight and cigarette smoke.,contextual proximity", "to": "sunlight", "width": 3.5}, {"from": "excision repair", "title": "In humans, excision repair is an important defense mechanism against the two major carcinogens, sunlight and cigarette smoke. Individuals defective in coupling transcription to repair suffer from neurological and skeletal abnormalities.,contextual proximity", "to": "transcription", "width": 3.5}, {"from": "excision repair", "title": "Excision in Escherichia coli is accomplished by three proteins designated UvrA, UvrB, and UvrC.,contextual proximity", "to": "uvra", "width": 3.5}, {"from": "excision repair", "title": "Excision in Escherichia coli is accomplished by three proteins designated UvrA, UvrB, and UvrC.,contextual proximity", "to": "uvrb", "width": 3.5}, {"from": "excision repair", "title": "Excision in Escherichia coli is accomplished by three proteins designated UvrA, UvrB, and UvrC.,contextual proximity", "to": "uvrc", "width": 3.5}, {"from": "excision repair", "title": "In humans, by contrast, 16 polypeptides including seven xeroderma pigmentosum (XP) proteins are required for the dual incisions.,contextual proximity", "to": "xeroderma pigmentosum (xp)", "width": 3.5}, {"from": "exponent", "title": "contextual proximity", "to": "motion", "width": 1.0}, {"from": "exponent", "title": "contextual proximity", "to": "rna molecule", "width": 0.5}, {"from": "exponent", "title": "contextual proximity", "to": "subdiffusive", "width": 0.75}, {"from": "four existing classes of inference algorithms", "title": "contextual proximity", "to": "global performance", "width": 0.75}, {"from": "four existing classes of inference algorithms", "title": "contextual proximity", "to": "machine learning approaches", "width": 0.5}, {"from": "four existing classes of inference algorithms", "title": "contextual proximity", "to": "regulondb", "width": 0.5}, {"from": "functions and size", "title": "Compared to the functional diversity of the regulon of the other general transcription factors in E. coli, the functions and size of the PurR regulon are limited.,contextual proximity", "to": "purr", "width": 1.75}, {"from": "gal mrna molecules", "title": "The same difference between gal mRNA molecules made in vitro in the absence of cyclic AMP or cyclic AMP receptor protein and gal RNA made in the presence of these factors is detected by this assay.", "to": "gal rna synthesized in vitro in the absence of cyclic amp or cyclic amp receptor protein", "width": 1.0}, {"from": "gal mrna molecules", "title": "contextual proximity", "to": "galactose operon", "width": 1.0}, {"from": "gal mrna molecules made in vitro", "title": "The gal mRNA molecules made in vitro also contain about five nucleotides more at their 5\u0027 end in the absence of cyclic AMP or cyclic AMP receptor protein compared to those made in the presence of these factors.", "to": "gal mrna molecules made in vitro in the absence of cyclic amp or cyclic amp receptor protein", "width": 1.0}, {"from": "gal mrna molecules made in vitro", "title": "contextual proximity", "to": "galactose operon", "width": 1.0}, {"from": "gal mrna molecules made in vitro in the absence of cyclic amp or cyclic amp receptor protein", "title": "contextual proximity", "to": "galactose operon", "width": 1.0}, {"from": "gal mrna molecules made in wild type cells", "title": "The gal mRNA molecules made in wild type cells have the same difference as the mRNA transcripts of the Escherichia coli galactose operon found in intact E. Coli cells with a defect in adenylate cyclase or the cyclic AMP receptor protein, which contain about five nucleotides more at their 5\u0027 end.,contextual proximity", "to": "galactose operon", "width": 2.0}, {"from": "gal rna", "title": "The intracellular levels of cyclic AMP determine which promoter is utilized for the expression of gal RNA.", "to": "gal rna made in wild type cells", "width": 1.0}, {"from": "gal rna", "title": "contextual proximity", "to": "galactose operon", "width": 1.0}, {"from": "gal rna made in wild type cells", "title": "contextual proximity", "to": "galactose operon", "width": 1.0}, {"from": "gal rna synthesized in vitro in the absence of cyclic amp or cyclic amp receptor protein", "title": "contextual proximity", "to": "galactose operon", "width": 1.0}, {"from": "galactose operon", "title": "contextual proximity", "to": "two overlapping promoters", "width": 1.0}, {"from": "gc box promoter elements", "title": "contextual proximity", "to": "sp1 (human)", "width": 0.5}, {"from": "gc box promoter elements", "title": "contextual proximity", "to": "sp1 (human) (c-terminal 168 amino acid residues)", "width": 0.5}, {"from": "gc box promoter elements", "title": "Sp1 is a protein present in mammalian cells that binds to GC box promoter elements and selectively activates mRNA synthesis from genes that contain functional recognition sites.", "to": "sp1", "width": 1.0}, {"from": "global level", "title": "contextual proximity", "to": "purr", "width": 0.75}, {"from": "global level", "title": "Our results identify previously unsuspected features of mRNA decay at a global level, indicating that generalizations about decay derived from the study of individual gene transcripts may have limited applicability.", "to": "mrna decay", "width": 1.0}, {"from": "global performance", "title": "contextual proximity", "to": "known e. coli regulatory interactions", "width": 0.75}, {"from": "global performance", "title": "Assessing the global performance of four existing classes of inference algorithms using 445 Escherichia coli Affymetrix arrays and 3,216 known E. coli regulatory interactions from RegulonDB.,contextual proximity", "to": "machine learning approaches", "width": 2.5}, {"from": "global performance", "title": "contextual proximity", "to": "performance estimates", "width": 0.75}, {"from": "global performance", "title": "contextual proximity", "to": "precision gain", "width": 0.75}, {"from": "global performance", "title": "contextual proximity", "to": "regulatory link", "width": 0.75}, {"from": "global performance", "title": "contextual proximity", "to": "regulondb", "width": 1.5}, {"from": "global performance", "title": "contextual proximity", "to": "systematically identify transcriptional regulatory interactions", "width": 0.75}, {"from": "global performance", "title": "contextual proximity", "to": "three transcription factors", "width": 0.75}, {"from": "global performance", "title": "contextual proximity", "to": "true positive rate", "width": 0.75}, {"from": "implications", "title": "contextual proximity", "to": "motion", "width": 1.0}, {"from": "implications", "title": "contextual proximity", "to": "rna molecule", "width": 0.5}, {"from": "implications", "title": "contextual proximity", "to": "subdiffusive", "width": 0.75}, {"from": "individual fluorescently labeled mrna molecules", "title": "We track the motion of individual fluorescently labeled mRNA molecules inside live E. coli cells.,contextual proximity", "to": "motion", "width": 2.0}, {"from": "individual fluorescently labeled mrna molecules", "title": "contextual proximity", "to": "rna molecule", "width": 0.5}, {"from": "individual fluorescently labeled mrna molecules", "title": "contextual proximity", "to": "subdiffusive", "width": 0.75}, {"from": "known e. coli regulatory interactions", "title": "contextual proximity", "to": "machine learning approaches", "width": 0.5}, {"from": "known e. coli regulatory interactions", "title": "Using 445 Escherichia coli Affymetrix arrays and 3,216 known E. Coli regulatory interactions from RegulonDB.,contextual proximity", "to": "regulondb", "width": 1.5}, {"from": "machine learning approaches", "title": "contextual proximity", "to": "performance estimates", "width": 0.5}, {"from": "machine learning approaches", "title": "contextual proximity", "to": "precision gain", "width": 0.5}, {"from": "machine learning approaches", "title": "contextual proximity", "to": "regulatory link", "width": 0.5}, {"from": "machine learning approaches", "title": "contextual proximity", "to": "regulondb", "width": 1.0}, {"from": "machine learning approaches", "title": "contextual proximity", "to": "systematically identify transcriptional regulatory interactions", "width": 0.5}, {"from": "machine learning approaches", "title": "contextual proximity", "to": "three transcription factors", "width": 0.5}, {"from": "machine learning approaches", "title": "contextual proximity", "to": "true positive rate", "width": 0.5}, {"from": "macromolecular crowding", "title": "contextual proximity", "to": "motion", "width": 1.0}, {"from": "macromolecular crowding", "title": "contextual proximity", "to": "rna molecule", "width": 0.5}, {"from": "macromolecular crowding", "title": "contextual proximity", "to": "subdiffusive", "width": 0.75}, {"from": "members of multiprotein complexes", "title": "Members of multiprotein complexes are made in precise proportion to their stoichiometry,", "to": "produced in precise proportion to their stoichiometry", "width": 1.0}, {"from": "methionine biosynthesis", "title": "How a metabolic pathway (methionine biosynthesis) balances production cost with activity requirements,", "to": "balances production cost with activity requirements", "width": 1.0}, {"from": "microarray data", "title": "contextual proximity", "to": "purr", "width": 0.75}, {"from": "motion", "title": "By modifying the parameters of the RNA molecule and the bacterial cell,,contextual proximity", "to": "rna molecule", "width": 3.0}, {"from": "motion", "title": "The motion is subdiffusive,,contextual proximity", "to": "subdiffusive", "width": 4.0}, {"from": "mrna decay", "title": "contextual proximity", "to": "purr", "width": 0.75}, {"from": "mrna decay in escherichia coli", "title": "The information available about factors affecting mRNA decay in E. Coli has been gleaned from studying less than 25 of the approximately 4,300 predicted E. Coli messages, which highlights the need to investigate these factors more broadly.", "to": "factors affecting mrna decay in e. coli", "width": 1.0}, {"from": "performance estimates", "title": "Coupled with RegulonDB, provides a valuable model system for further improvement of network inference algorithms using experimental data.,contextual proximity", "to": "regulondb", "width": 1.5}, {"from": "precise measures of rates of biomolecule production", "title": "Quantitative views of cellular functions require precise measures of rates of biomolecule production, especially proteins-the direct effectors of biological processes.", "to": "proteins-the direct effectors of biological processes", "width": 1.0}, {"from": "precision gain", "title": "contextual proximity", "to": "regulondb", "width": 0.5}, {"from": "purine metabolism", "title": "The PurR transcription factor plays a critical role in transcriptional regulation of purine metabolism in enterobacteria.,contextual proximity", "to": "purr", "width": 1.75}, {"from": "regulatory link", "title": "contextual proximity", "to": "regulondb", "width": 0.5}, {"from": "regulondb", "title": "contextual proximity", "to": "systematically identify transcriptional regulatory interactions", "width": 0.5}, {"from": "regulondb", "title": "contextual proximity", "to": "three transcription factors", "width": 0.5}, {"from": "regulondb", "title": "contextual proximity", "to": "true positive rate", "width": 0.5}, {"from": "rna molecule", "title": "contextual proximity", "to": "subdiffusive", "width": 1.5}, {"from": "sp1", "title": "contextual proximity", "to": "sp1 (human)", "width": 0.5}, {"from": "sp1", "title": "contextual proximity", "to": "sp1 (human) (c-terminal 168 amino acid residues)", "width": 0.5}, {"from": "sp1 (human)", "title": "contextual proximity", "to": "sp1 (human) (c-terminal 168 amino acid residues)", "width": 1.0}, {"from": "sp1 (human)", "title": "contextual proximity", "to": "zn(ii) finger motifs", "width": 0.5}, {"from": "sp1 (human) (c-terminal 168 amino acid residues)", "title": "contextual proximity", "to": "zn(ii) finger motifs", "width": 0.5}, {"from": "transcription factors", "title": "Estimates of absolute protein abundance also reveal principles for optimizing design. These include how the level of different types of transcription factors is optimized for rapid response,", "to": "level of different types is optimized for rapid response", "width": 1.0}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "forceAtlas2Based": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.015,
+            "damping": 0.4,
+            "gravitationalConstant": -31,
+            "springConstant": 0.08,
+            "springLength": 100
+        },
+        "solver": "forceAtlas2Based",
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+                    network.on("selectNode", neighbourhoodHighlight);
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
