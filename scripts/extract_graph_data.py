@@ -15,8 +15,11 @@ from helpers.df_helpers import graph2Df
 data_dir = "abstract_input"
 inputdirectory = Path(f"./data/{data_dir}")
 ## This is where the output csv files will be written
-out_dir = 'abstract_output'
-outputdirectory = Path(f"./data/{out_dir}")
+out_dir_raw = 'abstract_output'
+outputdirectory = Path(f"./data/{out_dir_raw}")
+
+out_dir_processed = 'abstract_output_processed'
+outputdirectory_processed_graph_data = Path(f"./data/{out_dir_processed}")
 
 ## Load data
 loader = DirectoryLoader(inputdirectory, show_progress=True)
@@ -106,3 +109,7 @@ dfg = (
     .agg({"chunk_id": ",".join, "edge": ','.join, 'count': 'sum'})
     .reset_index()
 )
+
+print(dfg)
+
+dfg.to_csv(outputdirectory/"graph_processed.csv", sep="|", index=False)
