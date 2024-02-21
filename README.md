@@ -1,23 +1,10 @@
 # DS_LOD_and_Knowledge_Graphs_2023_Tobias_Jennert_Melanie_Ullrich
 
-# Use poetry
+This is the documentation for the project done in LOD.
 
-run in shell
+1. To get the data and to store it the file **get_data.py** needs to be executed.
 
-export PATH="/Users/tobiasjennert/.local/bin:$PATH"
-
-
-## Doc
-
-Api-Endpoint = https://api.openalex.org/works?sample=20
-
-Interesting field in the data: abstract_inverted_index
-
-
-Source:
-- https://towardsdatascience.com/how-to-convert-any-text-into-a-graph-of-concepts-110844f22a1a
-- https://docs.openalex.org/api-entities/works
-
+2. To generate the graph data and to visualize it the file **extract_graph_data.py** needs to be executed.
 
 
 ## Project Planing
@@ -27,8 +14,7 @@ Source:
 - Store the abstract text in a txt file ✅
 - Insert filters in the open alex url to get works for a specific topic ✅
 - Get Ollama running via the api ✅
-- Generate graph data with ollama
-- Load graph data into neo4j 
-- Visualize graph data in neo4j
+- Generate graph data with ollama ✅
+- Visualize graph data in neo4j ✅
 
 
