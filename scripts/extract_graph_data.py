@@ -73,7 +73,9 @@ dfg1.dropna(subset=["node_1", "node_2", 'edge'], inplace=True)
 dfg1['count'] = 4 
 ## Increasing the weight of the relation to 4. 
 ## We will assign the weight of 1 when later the contextual proximity will be calculated.  
-print(dfg1.shape)
+
+selected_columns = ['node_1', 'node_2', 'edge', 'chunk_id']
+print(dfg1[selected_columns])
 dfg1.head()
 
 ## Calculating contextual proximity
@@ -82,9 +84,12 @@ def contextual_proximity(df: pd.DataFrame) -> pd.DataFrame:
     dfg_long = pd.melt(
         df, id_vars=["chunk_id"], value_vars=["node_1", "node_2"], value_name="node"
     )
+
+    print(dfg_long)
     dfg_long.drop(columns=["variable"], inplace=True)
     # Self join with chunk id as the key will create a link between terms occuring in the same text chunk.
     dfg_wide = pd.merge(dfg_long, dfg_long, on="chunk_id", suffixes=("_1", "_2"))
+    print(dfg_wide)
     # drop self loops
     self_loops_drop = dfg_wide[dfg_wide["node_1"] == dfg_wide["node_2"]].index
     dfg2 = dfg_wide.drop(index=self_loops_drop).reset_index(drop=True)
