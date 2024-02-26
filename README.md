@@ -1,6 +1,9 @@
 # DS_LOD_and_Knowledge_Graphs_2023_Tobias_Jennert_Melanie_Ullrich
 
-This is the documentation for the project done in LOD.
+The project presents a method for creating a knowledge graph from text data of publications
+using open-source instruction-tuned LLMs. The method involves retrieving data, processing data,
+generating graph data and visualizing the graph data.
+
 
 1. To get the data and to store it the file **get_data.py** needs to be executed.
 
@@ -15,6 +18,6 @@ This is the documentation for the project done in LOD.
 - Insert filters in the open alex url to get works for a specific topic ✅
 - Get Ollama running via the api ✅
 - Generate graph data with ollama ✅
-- Visualize graph data in neo4j ✅
+- Visualize graph data ✅
 
 
